@@ -25,7 +25,7 @@ func initDB() error {
 		return err
 	}
 
-	if err := db.Ping(); err != nil {
+	if err := database.Ping(); err != nil {
 		log.Println("[ERROR] Could not verify the connection:", err)
 		return err
 	}
