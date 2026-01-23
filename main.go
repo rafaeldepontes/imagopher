@@ -7,9 +7,13 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/joho/godotenv"
+	"github.com/rafaeldepontes/imagopher/internal/application"
+	"github.com/rafaeldepontes/imagopher/internal/application/model"
 	"github.com/rafaeldepontes/imagopher/internal/handler"
 	"github.com/rafaeldepontes/imagopher/internal/tool"
 )
+
+var app *model.Application
 
 func init() {
 	env := ".env"
@@ -17,13 +21,15 @@ func init() {
 	if err := godotenv.Load(env); err != nil {
 		log.Fatalln("[ERROR] Couldn't load the env variable:", err)
 	}
+
+	app = application.NewApplication()
 }
 
 func main() {
 	port := os.Getenv("PORT")
 
 	r := chi.NewRouter()
-	handler.Routes(r)
+	handler.Routes(r, app)
 
 	log.Printf("Application running on %s\n", "localhost:"+port)
 	log.Fatalln(http.ListenAndServe(":"+port, r))
