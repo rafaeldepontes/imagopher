@@ -13,6 +13,7 @@ services:
       replicas: 1
     volumes:
       - postgres:/var/lib/postgresql/data
+      - ./scripts:/docker-entrypoint-initdb.d
 
   golang-project:
     container_name: "my-project"
