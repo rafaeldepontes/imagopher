@@ -1,8 +1,11 @@
 package processor
 
+import "github.com/rafaeldepontes/imagopher/internal/image/model"
+
 type Service interface {
-	FindImageByID(id uint64) (any, error)
-	FindImages() (any, error)
-	TransformImage(img any) error
-	UploadImage(img any) (uint64, error)
+	FindImageByID(id uint64) (*model.ImageEntity, error)
+	FindImageByUUID(uuid string) (*model.ImageEntity, error)
+	FindImages() ([]model.ImageEntity, error)
+	TransformImage(img *model.TransformReq) error
+	UploadImage(img *model.ImageEntity) (uint64, error)
 }

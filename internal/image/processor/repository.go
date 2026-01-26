@@ -1,8 +1,13 @@
 package processor
 
+import (
+	"github.com/google/uuid"
+	"github.com/rafaeldepontes/imagopher/internal/image/model"
+)
+
 type Repository interface {
-	FindImageByID(id uint64) (any, error)
-	FindImages() (any, error)
-	TransformImage(img any) error
-	UploadImage(img any) (uint64, error)
+	FindImageByID(id uint64) (*model.ImageEntity, error)
+	FindImageByUUID(uuid uuid.UUID) (*model.ImageEntity, error)
+	FindImages() ([]model.ImageEntity, error)
+	UploadImage(img *model.ImageEntity) (uint64, error)
 }
