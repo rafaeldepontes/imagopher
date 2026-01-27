@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/rafaeldepontes/imagopher/internal/image/model"
 	"github.com/rafaeldepontes/imagopher/internal/image/processor"
 	"github.com/rafaeldepontes/imagopher/internal/image/processor/service"
 )
@@ -39,17 +40,12 @@ func (ic *imageController) FindImageByID(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Returns the image and the correct http status...
-	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 }
 
 // FindImages implements [processor.Controller].
 func (ic *imageController) FindImages(w http.ResponseWriter, r *http.Request) {
-	// Unmarshal the body
-
-	// Sends it to the service layer...
-	// NOT IMPLEMENTED YET:
-	// var imgs model.Image[]
+	var imgs []model.ImageEntity
 	imgs, err := ic.imgSvc.FindImages()
 	if err != nil {
 		log.Println("[ERROR] Could not find the images: ", err)
@@ -65,7 +61,6 @@ func (ic *imageController) FindImages(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create the beatiful response
-	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
 }
 
@@ -85,16 +80,29 @@ func (ic *imageController) TransformImage(w http.ResponseWriter, r *http.Request
 
 // UploadImage implements [processor.Controller].
 func (ic *imageController) UploadImage(w http.ResponseWriter, r *http.Request) {
-	// Unmarshal the body into a file
+	// This thing only supports up to 10 Mb...
+	if err := r.ParseMultipartForm(10 << 20); err != nil {
+		log.Println("[ERROR] Could not parse the multipart file:", err)
+		http.Error(w, "Max file size is 10 Mb", http.StatusBadRequest)
+		return
+	}
+
+	f, handler, err := r.FormFile("image")
+	if err != nil {
+		log.Println("[ERROR] Could not get the image file: ", err)
+		http.Error(w, "Something really bad happened...", http.StatusInternalServerError)
+		return
+	}
+	defer f.Close()
 
 	// Sends the file over the service to be saved somewhere...
-	id, err := ic.imgSvc.UploadImage(nil)
+	id, err := ic.imgSvc.UploadImage(handler)
 	if err != nil {
 		http.Error(w, "Something went really bad", http.StatusInternalServerError)
 		return
 	}
 
-	if err = json.NewEncoder(w).Encode(map[string]uint64{
+	if err = json.NewEncoder(w).Encode(map[string]string{
 		"id": id,
 	}); err != nil {
 		log.Println("[ERROR] Could not parse JSON: ", err)
