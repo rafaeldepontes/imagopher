@@ -48,7 +48,6 @@ func (i *imageRepository) FindImageByUUID(id uuid.UUID) (*model.ImageEntity, err
 
 	query := "SELECT id, path, uuid FROM images img WHERE img.uuid = ?"
 
-	// TODO: Check where the cache layer should be... If here or in the layer above...
 	if err := i.db.QueryRow(query, id).Scan(img.ID, img.Path, img.UUID); err != nil {
 		log.Println("[ERROR] Could not complete the scan:", err)
 		return nil, err

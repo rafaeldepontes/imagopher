@@ -4,18 +4,22 @@ import (
 	"log"
 
 	"github.com/google/uuid"
+	"github.com/rafaeldepontes/imagopher/internal/cache"
+	"github.com/rafaeldepontes/imagopher/internal/cache/image"
 	"github.com/rafaeldepontes/imagopher/internal/image/model"
 	"github.com/rafaeldepontes/imagopher/internal/image/processor"
 	"github.com/rafaeldepontes/imagopher/internal/image/processor/repository"
 )
 
 type imageService struct {
-	repo processor.Repository
+	repo  processor.Repository
+	cache cache.Cache[string, uint64]
 }
 
 func NewService() processor.Service {
 	return &imageService{
-		repo: repository.NewRepository(),
+		repo:  repository.NewRepository(),
+		cache: image.NewCache[uint64](),
 	}
 }
 
@@ -30,10 +34,14 @@ func (i *imageService) FindImageByID(id uint64) (*model.ImageEntity, error) {
 	return img, nil
 }
 
-// TODO: Need to check how to use a UUID for real... I'm kinda lost
-// here, because the struct UUID is one thing and the it's Value
-// its another world...
+// TODO: Need to check how to use an UUID for real... I'm kinda lost
+// here, because the UUID struct and its Value are different...
 func (i *imageService) FindImageByUUID(body string) (*model.ImageEntity, error) {
+	if data, has := i.cache.Get(body); has {
+		log.Println("[INFO] UUID found in cache, using ID instead")
+		return i.FindImageByID(data)
+	}
+
 	log.Printf("[INFO] Searchig for an image by it's UUID: %s\n", body)
 
 	imgUUID, err := uuid.Parse(body)
@@ -42,12 +50,13 @@ func (i *imageService) FindImageByUUID(body string) (*model.ImageEntity, error) 
 		return nil, err
 	}
 
-	// TODO: Implement cache here... seems a good idea, it helps making
-	// our database health...
 	img, err := i.repo.FindImageByUUID(imgUUID)
 	if err != nil {
 		return nil, err
 	}
+
+	i.cache.Add(body, img.ID, nil)
+
 	return img, nil
 }
 
