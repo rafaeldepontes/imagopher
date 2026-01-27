@@ -15,3 +15,7 @@ type TransformReq struct {
 
 	// TODO: Add the transformation... for now I only have the UUID
 }
+
+type ImageResp struct {
+	UUID uuid.UUID `json:"id"`
+}
