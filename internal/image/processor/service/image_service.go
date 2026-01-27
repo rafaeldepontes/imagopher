@@ -2,6 +2,9 @@ package service
 
 import (
 	"log"
+	"mime/multipart"
+	"os"
+	"path"
 
 	"github.com/google/uuid"
 	"github.com/rafaeldepontes/imagopher/internal/cache"
@@ -10,6 +13,8 @@ import (
 	"github.com/rafaeldepontes/imagopher/internal/image/processor"
 	"github.com/rafaeldepontes/imagopher/internal/image/processor/repository"
 )
+
+const ImgDir = "./public/uploads/"
 
 type imageService struct {
 	repo  processor.Repository
@@ -78,11 +83,24 @@ func (i *imageService) TransformImage(img *model.TransformReq) error {
 	panic("unimplemented")
 }
 
-// TODO: check to see if it's better to use a File here and then do all the
-// logic...
-func (i *imageService) UploadImage(img *model.ImageEntity) (uint64, error) {
-	// TODO: Core method to implement... As I need to create the image file
-	// from my client to my server, I basically cannot continue without
-	// finishing this...
-	panic("unimplemented")
+func (i *imageService) UploadImage(handler *multipart.FileHeader) (string, error) {
+	name := path.Join(ImgDir, handler.Filename)
+	if err := os.WriteFile(name, nil, 1); err != nil {
+		log.Printf("[ERROR] Could not write the file: %s - %s\n", name, err.Error())
+		return "", err
+	}
+
+	img := &model.ImageEntity{
+		Path: name,
+		UUID: uuid.New(),
+	}
+
+	id, err := i.repo.UploadImage(img)
+	if err != nil {
+		return "", err
+	}
+
+	i.cache.Add(img.UUID.String(), id, nil)
+
+	return img.UUID.String(), err
 }
