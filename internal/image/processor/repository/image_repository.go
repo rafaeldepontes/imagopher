@@ -90,16 +90,18 @@ func (i *imageRepository) FindImages() ([]model.ImageEntity, error) {
 func (i *imageRepository) UploadImage(img *model.ImageEntity) (uint64, error) {
 	query := "INSERT INTO images (path, uuid) VALUES ($1, $2);"
 
-	result, err := i.db.Exec(query, img.Path, img.UUID)
+	_, err := i.db.Exec(query, img.Path, img.UUID)
 	if err != nil {
 		log.Println("[ERROR] Could not insert the new image:", err)
 		return 0, err
 	}
 
-	id, err := result.LastInsertId()
-	if err != nil {
-		log.Println("[ERROR] Could not extract the last inserted ID:", err)
-		return 0, nil
-	}
-	return uint64(id), nil
+	// NO SUPPORT.
+	// id, err := result.LastInsertId()
+	// if err != nil {
+	// 	log.Println("[ERROR] Could not extract the last inserted ID:", err)
+	// 	return 0, nil
+	// }
+	// return uint64(id), nil
+	return 0, nil
 }

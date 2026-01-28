@@ -6,11 +6,8 @@ import (
 )
 
 func MapImageRoutes(r *chi.Mux, c processor.Controller) {
-	// TODO: implement the image processing service... Need to think about the logic
-	// maybe storing everything in disk is not a good idea, but I don't want to use
-	// AWS S3, so... Need to think more about it.
-
 	// Accepts pagination
+	// TODO: Implement the cursor pagination...
 	r.Get("/images", c.FindImages)
 
 	r.Post("/images", c.UploadImage)

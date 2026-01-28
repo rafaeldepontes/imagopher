@@ -36,11 +36,12 @@ func (i *imageService) FindImageByID(id uint64) (*model.ImageEntity, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// TODO: get the image from disk and sent it over.
+
 	return img, nil
 }
 
-// TODO: Need to check how to use an UUID for real... I'm kinda lost
-// here, because the UUID struct and its Value are different...
 func (i *imageService) FindImageByUUID(body string) (*model.ImageEntity, error) {
 	if data, has := i.cache.Get(body); has {
 		log.Println("[INFO] UUID found in cache, using ID instead")
@@ -61,6 +62,8 @@ func (i *imageService) FindImageByUUID(body string) (*model.ImageEntity, error) 
 	}
 
 	i.cache.Add(body, img.ID, nil)
+
+	// TODO: get the image from disk and sent it over.
 
 	return img, nil
 }
@@ -83,7 +86,17 @@ func (i *imageService) TransformImage(img *model.TransformReq) error {
 	panic("unimplemented")
 }
 
+// UploadImage has a little (HUGE) problem, it uses the file name as their kinda "path"
+// so, any file can override the same photo if they have the same name, it will not be
+// stored at the database, but it will override the existing one. Or if it not override
+// it will probably open the wrong one...
+//
+// My go to solution would be using the UUID name to create a new directory and inside
+// of this new directory create a new file with the same name. That MAYBE be the solution.
 func (i *imageService) UploadImage(handler *multipart.FileHeader) (string, error) {
+
+	// TODO: create a new directory with the UUID string name, save the UUID and path to
+	// get the image later.
 	name := path.Join(ImgDir, handler.Filename)
 	if err := os.WriteFile(name, nil, 1); err != nil {
 		log.Printf("[ERROR] Could not write the file: %s - %s\n", name, err.Error())
@@ -95,12 +108,14 @@ func (i *imageService) UploadImage(handler *multipart.FileHeader) (string, error
 		UUID: uuid.New(),
 	}
 
-	id, err := i.repo.UploadImage(img)
+	_, err := i.repo.UploadImage(img)
 	if err != nil {
 		return "", err
 	}
 
-	i.cache.Add(img.UUID.String(), id, nil)
+	// This would be sweet to have, but unfortunately pgx doesn't have
+	// support for LastInsertId... So this line is useless for now.
+	// i.cache.Add(img.UUID.String(), id, nil)
 
 	return img.UUID.String(), err
 }
