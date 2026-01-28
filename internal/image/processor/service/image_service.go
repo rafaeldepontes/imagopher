@@ -14,7 +14,10 @@ import (
 	"github.com/rafaeldepontes/imagopher/internal/image/processor/repository"
 )
 
-const ImgDir = "./public/uploads/"
+const (
+	ImgDir         = "./public/uploads/"
+	DefaultPermDir = 0755
+)
 
 type imageService struct {
 	repo  processor.Repository
@@ -94,18 +97,22 @@ func (i *imageService) TransformImage(img *model.TransformReq) error {
 // My go to solution would be using the UUID name to create a new directory and inside
 // of this new directory create a new file with the same name. That MAYBE be the solution.
 func (i *imageService) UploadImage(handler *multipart.FileHeader) (string, error) {
+	UUID := uuid.New()
+	name := path.Join(ImgDir, UUID.String(), handler.Filename)
 
-	// TODO: create a new directory with the UUID string name, save the UUID and path to
-	// get the image later.
-	name := path.Join(ImgDir, handler.Filename)
-	if err := os.WriteFile(name, nil, 1); err != nil {
-		log.Printf("[ERROR] Could not write the file: %s - %s\n", name, err.Error())
+	img := &model.ImageEntity{
+		UUID: UUID,
+		Path: name,
+	}
+
+	if err := os.Mkdir(name, DefaultPermDir); err != nil {
+		log.Printf("[ERROR] Could not create the directory %s, because: %s\n", name, err.Error())
 		return "", err
 	}
 
-	img := &model.ImageEntity{
-		Path: name,
-		UUID: uuid.New(),
+	if err := os.WriteFile(name, nil, 1); err != nil {
+		log.Printf("[ERROR] Could not write the file: %s - %s\n", name, err.Error())
+		return "", err
 	}
 
 	_, err := i.repo.UploadImage(img)
