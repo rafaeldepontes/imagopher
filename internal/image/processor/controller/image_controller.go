@@ -23,16 +23,24 @@ func NewController() processor.Controller {
 // FindImageById implements [processor.Controller].
 func (ic *imageController) FindImageByID(w http.ResponseWriter, r *http.Request) {
 	// Unmarshal the request body...
+	param := r.URL.Query().Get("id")
+	if param == "" {
+		log.Println("[ERROR] Id not present")
+		http.Error(w, "Id is missing", http.StatusBadRequest)
+		return
+	}
 
 	// Sends the JSON to the service
-	img, err := ic.imgSvc.FindImageByID(uint64(int64(1)))
+	img, err := ic.imgSvc.FindImageByUUID(param)
 	if err != nil {
 		log.Println("[ERROR] Could not find the image: ", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	// Encode the photo or what have this is...
+	// TODO: take care of the data here... Should not sent the whole image
+	// just the its bytes and some metadata, also the UUID for the frontend/
+	// API...
 	if err = json.NewEncoder(w).Encode(img); err != nil {
 		log.Println("[ERROR] Could not encode JSON: ", err)
 		http.Error(w, "Something went really bad", http.StatusInternalServerError)
