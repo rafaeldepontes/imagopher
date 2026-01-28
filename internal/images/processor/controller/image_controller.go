@@ -5,9 +5,9 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/rafaeldepontes/imagopher/internal/image/model"
-	"github.com/rafaeldepontes/imagopher/internal/image/processor"
-	"github.com/rafaeldepontes/imagopher/internal/image/processor/service"
+	"github.com/rafaeldepontes/imagopher/internal/images/model"
+	"github.com/rafaeldepontes/imagopher/internal/images/processor"
+	"github.com/rafaeldepontes/imagopher/internal/images/processor/service"
 )
 
 type imageController struct {
@@ -75,9 +75,15 @@ func (ic *imageController) FindImages(w http.ResponseWriter, r *http.Request) {
 // TransformImage implements [processor.Controller].
 func (ic *imageController) TransformImage(w http.ResponseWriter, r *http.Request) {
 	// Unmarshal the body
+	var transform *model.TransformReq
+	if err := json.NewDecoder(r.Body).Decode(transform); err != nil {
+		log.Println("[ERROR] Could not decode the json:", err)
+		http.Error(w, "Something went really bad", http.StatusInternalServerError)
+		return
+	}
 
 	// Sends it over and hope for the best...
-	if err := ic.imgSvc.TransformImage(nil); err != nil {
+	if err := ic.imgSvc.TransformImage(transform); err != nil {
 		log.Println("[ERROR] Could not transform the imagem: ", err)
 		http.Error(w, "Something went really bad", http.StatusInternalServerError)
 		return

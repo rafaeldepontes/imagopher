@@ -5,8 +5,8 @@ import (
 	"log"
 
 	"github.com/google/uuid"
-	"github.com/rafaeldepontes/imagopher/internal/image/model"
-	"github.com/rafaeldepontes/imagopher/internal/image/processor"
+	"github.com/rafaeldepontes/imagopher/internal/images/model"
+	"github.com/rafaeldepontes/imagopher/internal/images/processor"
 	"github.com/rafaeldepontes/imagopher/pkg/database/postgres"
 )
 

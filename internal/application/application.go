@@ -2,7 +2,7 @@ package application
 
 import (
 	"github.com/rafaeldepontes/imagopher/internal/application/model"
-	"github.com/rafaeldepontes/imagopher/internal/image/processor/controller"
+	"github.com/rafaeldepontes/imagopher/internal/images/processor/controller"
 )
 
 func NewApplication() *model.Application {

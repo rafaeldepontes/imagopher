@@ -2,7 +2,7 @@ package processor
 
 import (
 	"github.com/google/uuid"
-	"github.com/rafaeldepontes/imagopher/internal/image/model"
+	"github.com/rafaeldepontes/imagopher/internal/images/model"
 )
 
 type Repository interface {

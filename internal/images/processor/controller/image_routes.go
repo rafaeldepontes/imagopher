@@ -2,7 +2,7 @@ package controller
 
 import (
 	"github.com/go-chi/chi/v5"
-	"github.com/rafaeldepontes/imagopher/internal/image/processor"
+	"github.com/rafaeldepontes/imagopher/internal/images/processor"
 )
 
 func MapImageRoutes(r *chi.Mux, c processor.Controller) {

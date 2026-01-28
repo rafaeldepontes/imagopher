@@ -3,7 +3,7 @@ package processor
 import (
 	"mime/multipart"
 
-	"github.com/rafaeldepontes/imagopher/internal/image/model"
+	"github.com/rafaeldepontes/imagopher/internal/images/model"
 )
 
 type Service interface {

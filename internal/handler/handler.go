@@ -3,7 +3,7 @@ package handler
 import (
 	"github.com/go-chi/chi/v5"
 	"github.com/rafaeldepontes/imagopher/internal/application/model"
-	"github.com/rafaeldepontes/imagopher/internal/image/processor/controller"
+	"github.com/rafaeldepontes/imagopher/internal/images/processor/controller"
 )
 
 // I'm thinking of building my on Radix Tree to not use the

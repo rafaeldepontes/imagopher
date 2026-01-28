@@ -9,9 +9,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/rafaeldepontes/imagopher/internal/cache"
 	"github.com/rafaeldepontes/imagopher/internal/cache/image"
-	"github.com/rafaeldepontes/imagopher/internal/image/model"
-	"github.com/rafaeldepontes/imagopher/internal/image/processor"
-	"github.com/rafaeldepontes/imagopher/internal/image/processor/repository"
+	"github.com/rafaeldepontes/imagopher/internal/images/model"
+	"github.com/rafaeldepontes/imagopher/internal/images/processor"
+	"github.com/rafaeldepontes/imagopher/internal/images/processor/repository"
 )
 
 const (
@@ -81,11 +81,58 @@ func (i *imageService) FindImages() ([]model.ImageEntity, error) {
 }
 
 // TransformImage implements [processor.Service].
-func (i *imageService) TransformImage(img *model.TransformReq) error {
+func (i *imageService) TransformImage(transform *model.TransformReq) error {
 	// TODO: Finish this method... this is a bunch of image manipulation
 	// should be pretty straight foward, just calculate some vectors or
 	// I should use a third party library? Need to put a little bit more
 	// thought into it...
+	img, err := i.FindImageByUUID(transform.UUID.String())
+	if err != nil {
+		return err
+	}
+
+	if transform.Watermark != nil {
+		// Do nothing for now...
+		println(img.Path)
+	}
+
+	if transform.Rotate != nil {
+		// Do nothing for now...
+		println(img.Path)
+
+		// image.Red
+	}
+
+	if transform.Resize != nil {
+		// Do nothing for now...
+		println(img.Path)
+	}
+
+	if transform.Mirror != nil {
+		// Do nothing for now...
+		println(img.Path)
+	}
+
+	if transform.Format != nil {
+		// Do nothing for now...
+		println(img.Path)
+	}
+
+	if transform.Filters != nil {
+		// Do nothing for now...
+		println(img.Path)
+	}
+
+	if transform.Crop != nil {
+		// Do nothing for now...
+		println(img.Path)
+	}
+
+	if transform.Compress != nil {
+		// Do nothing for now...
+		println(img.Path)
+	}
+
 	panic("unimplemented")
 }
 
