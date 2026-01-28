@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/rafaeldepontes/imagopher/internal/cache"
-	"github.com/rafaeldepontes/imagopher/internal/cache/image"
+	"github.com/rafaeldepontes/imagopher/internal/cache/imagec"
 	"github.com/rafaeldepontes/imagopher/internal/images/model"
 	"github.com/rafaeldepontes/imagopher/internal/images/processor"
 	"github.com/rafaeldepontes/imagopher/internal/images/processor/repository"
@@ -27,7 +27,7 @@ type imageService struct {
 func NewService() processor.Service {
 	return &imageService{
 		repo:  repository.NewRepository(),
-		cache: image.NewCache[uint64](),
+		cache: imagec.NewCache[uint64](),
 	}
 }
 
@@ -99,8 +99,6 @@ func (i *imageService) TransformImage(transform *model.TransformReq) error {
 	if transform.Rotate != nil {
 		// Do nothing for now...
 		println(img.Path)
-
-		// image.Red
 	}
 
 	if transform.Resize != nil {
