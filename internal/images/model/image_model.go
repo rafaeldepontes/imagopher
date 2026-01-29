@@ -6,6 +6,7 @@ type ImageEntity struct {
 	ID   uint64    `json:"id"`
 	Path string    `json:"path"`
 	UUID uuid.UUID `json:"uuid"`
+	Type string    `json:"type"`
 }
 
 // TransformReq has an UUID as their "id", this is a protection

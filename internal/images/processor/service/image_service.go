@@ -1,10 +1,12 @@
 package service
 
 import (
+	"errors"
 	"log"
 	"mime/multipart"
 	"os"
 	"path"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/rafaeldepontes/imagopher/internal/cache"
@@ -14,9 +16,23 @@ import (
 	"github.com/rafaeldepontes/imagopher/internal/images/processor/repository"
 )
 
+type imgType string
+
 const (
-	ImgDir         = "./public/uploads/"
+	// Paths
+	ImgDir = "./public/uploads/"
+
+	// Perms
 	DefaultPermDir = 0755
+
+	// Types
+	JPG  imgType = "jpg"
+	APNG imgType = "apng"
+	PNG  imgType = "png"
+	GIF  imgType = "gif"
+	AVIF imgType = "avif"
+	SVG  imgType = "svg"
+	WebP imgType = "webp"
 )
 
 type imageService struct {
@@ -145,9 +161,19 @@ func (i *imageService) UploadImage(handler *multipart.FileHeader) (string, error
 	UUID := uuid.New()
 	name := path.Join(ImgDir, UUID.String(), handler.Filename)
 
+	parts := strings.Split(handler.Filename, ".")
+	if len(parts) < 2 {
+		log.Println("[ERROR] File without a proper type.")
+		return "", errors.New("File without a type...")
+	}
+
 	img := &model.ImageEntity{
 		UUID: UUID,
 		Path: name,
+
+		// I believe this should work believing that the last element in my
+		// array should be the file type.
+		Type: string(getImageType(parts[len(parts)-1])),
 	}
 
 	if err := os.Mkdir(name, DefaultPermDir); err != nil {
@@ -170,4 +196,33 @@ func (i *imageService) UploadImage(handler *multipart.FileHeader) (string, error
 	// i.cache.Add(img.UUID.String(), id, nil)
 
 	return img.UUID.String(), err
+}
+
+func getImageType(src string) imgType {
+	jpegOption := map[string]bool{
+		"jpg":   true,
+		"jpeg":  true,
+		"jfif":  true,
+		"pjpeg": true,
+		"pjp":   true,
+	}
+
+	switch src {
+	case string(APNG):
+		return APNG
+	case string(AVIF):
+		return AVIF
+	case string(GIF):
+		return GIF
+	case string(PNG):
+		return PNG
+	case string(SVG):
+		return SVG
+	case string(WebP):
+		return WebP
+	}
+	if val := jpegOption[src]; val {
+		return JPG
+	}
+	return ""
 }

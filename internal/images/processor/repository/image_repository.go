@@ -32,9 +32,9 @@ func NewRepository() processor.Repository {
 func (i *imageRepository) FindImageByID(id uint64) (*model.ImageEntity, error) {
 	img := &model.ImageEntity{}
 
-	query := "SELECT id, path, uuid FROM images img WHERE img.id = ?"
+	query := "SELECT id, path, type, uuid FROM images img WHERE img.id = ?"
 
-	if err := i.db.QueryRow(query, id).Scan(img.ID, img.Path, img.UUID); err != nil {
+	if err := i.db.QueryRow(query, id).Scan(img.ID, img.Path, img.Type, img.UUID); err != nil {
 		log.Println("[ERROR] Could not complete the scan:", err)
 		return nil, err
 	}
@@ -46,9 +46,9 @@ func (i *imageRepository) FindImageByID(id uint64) (*model.ImageEntity, error) {
 func (i *imageRepository) FindImageByUUID(id uuid.UUID) (*model.ImageEntity, error) {
 	img := &model.ImageEntity{}
 
-	query := "SELECT id, path, uuid FROM images img WHERE img.uuid = ?"
+	query := "SELECT id, path, type, uuid FROM images img WHERE img.uuid = ?"
 
-	if err := i.db.QueryRow(query, id).Scan(img.ID, img.Path, img.UUID); err != nil {
+	if err := i.db.QueryRow(query, id).Scan(img.ID, img.Path, img.Type, img.UUID); err != nil {
 		log.Println("[ERROR] Could not complete the scan:", err)
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func (i *imageRepository) FindImageByUUID(id uuid.UUID) (*model.ImageEntity, err
 func (i *imageRepository) FindImages() ([]model.ImageEntity, error) {
 	var imgs []model.ImageEntity
 
-	query := "SELECT id, path, uuid FROM images;"
+	query := "SELECT id, path, type, uuid FROM images;"
 
 	rows, err := i.db.Query(query)
 	if err != nil {
@@ -72,7 +72,7 @@ func (i *imageRepository) FindImages() ([]model.ImageEntity, error) {
 	for rows.Next() {
 		var img model.ImageEntity
 
-		if err := rows.Scan(&img.ID, &img.Path, &img.UUID); err != nil {
+		if err := rows.Scan(&img.ID, &img.Path, &img.UUID, &img.Type); err != nil {
 			log.Println("[ERROR] Could not complete the scan:", err)
 			return nil, err
 		}
@@ -88,9 +88,9 @@ func (i *imageRepository) FindImages() ([]model.ImageEntity, error) {
 }
 
 func (i *imageRepository) UploadImage(img *model.ImageEntity) (uint64, error) {
-	query := "INSERT INTO images (path, uuid) VALUES ($1, $2);"
+	query := "INSERT INTO images (path, type, uuid) VALUES ($1, $2, $3);"
 
-	_, err := i.db.Exec(query, img.Path, img.UUID)
+	_, err := i.db.Exec(query, img.Path, img.Type, img.UUID)
 	if err != nil {
 		log.Println("[ERROR] Could not insert the new image:", err)
 		return 0, err
