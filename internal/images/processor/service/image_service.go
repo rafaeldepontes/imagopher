@@ -107,6 +107,15 @@ func (i *imageService) TransformImage(transform *model.TransformReq) error {
 		return err
 	}
 
+	f, err := os.Open(img.Path)
+	if err != nil {
+		log.Println("[ERROR] Could not open the image: ", img.Path, err)
+		return err
+	}
+	defer f.Close()
+
+	// TODO: use "bild" to make each one of this transformation... doing it
+	// by hand is kinda boring and I'm not into vector manipulation.
 	if transform.Watermark != nil {
 		// Do nothing for now...
 		println(img.Path)
