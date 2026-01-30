@@ -25,6 +25,8 @@ func init() {
 	app = application.NewApplication()
 }
 
+// TODO: Let's be real here... who needs an interface when you have the source code
+// and the cli using curl (or Postman... I like postman.).
 func main() {
 	port := os.Getenv("PORT")
 

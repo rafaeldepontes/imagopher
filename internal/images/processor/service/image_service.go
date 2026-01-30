@@ -136,7 +136,7 @@ func (i *imageService) TransformImage(transform *model.TransformReq) error {
 		)
 	}
 
-	// Need to validate the crop limites...
+	// TODO: need to create a validation for the crop limites...
 	if transform.Crop != nil {
 		rect := image.Rect(
 			transform.Crop.X,
@@ -242,6 +242,7 @@ func (i *imageService) UploadImage(handler *multipart.FileHeader) (string, error
 
 	dst, err := os.Create(dstPath)
 	if err != nil {
+		log.Println("[ERROR] Could not file:", err)
 		return "", err
 	}
 	defer dst.Close()
@@ -250,6 +251,10 @@ func (i *imageService) UploadImage(handler *multipart.FileHeader) (string, error
 	defer src.Close()
 
 	_, err = io.Copy(dst, src)
+	if err != nil {
+		log.Println("[ERROR] Could not copy the image content:", err)
+		return "", err
+	}
 
 	_, err = i.repo.UploadImage(img)
 	if err != nil {

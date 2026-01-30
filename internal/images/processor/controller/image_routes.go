@@ -5,6 +5,8 @@ import (
 	"github.com/rafaeldepontes/imagopher/internal/images/processor"
 )
 
+// TODO: Implement or use rate limite... I'm think of maybe implement
+// my onw, but that seems a little to much.
 func MapImageRoutes(r *chi.Mux, c processor.Controller) {
 	// Accepts pagination
 	// TODO: Implement the cursor pagination...
