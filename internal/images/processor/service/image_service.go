@@ -107,10 +107,6 @@ func (i *imageService) FindImages() ([]model.ImageEntity, error) {
 
 // TransformImage implements [processor.Service].
 func (i *imageService) TransformImage(transform *model.TransformReq) error {
-	// TODO: Finish this method... this is a bunch of image manipulation
-	// should be pretty straight foward, just calculate some vectors or
-	// I should use a third party library? Need to put a little bit more
-	// thought into it...
 	imgEntity, err := i.FindImageByUUID(transform.UUID.String())
 	if err != nil {
 		return err
