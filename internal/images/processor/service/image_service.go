@@ -2,12 +2,21 @@ package service
 
 import (
 	"errors"
+	"io"
 	"log"
 	"mime/multipart"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
+	"image"
+	"image/color"
+	_ "image/gif"
+	_ "image/jpeg"
+	"image/png"
+
+	"github.com/disintegration/imaging"
 	"github.com/google/uuid"
 	"github.com/rafaeldepontes/imagopher/internal/cache"
 	"github.com/rafaeldepontes/imagopher/internal/cache/imagec"
@@ -102,61 +111,103 @@ func (i *imageService) TransformImage(transform *model.TransformReq) error {
 	// should be pretty straight foward, just calculate some vectors or
 	// I should use a third party library? Need to put a little bit more
 	// thought into it...
-	img, err := i.FindImageByUUID(transform.UUID.String())
+	imgEntity, err := i.FindImageByUUID(transform.UUID.String())
 	if err != nil {
 		return err
 	}
 
-	f, err := os.Open(img.Path)
+	outputPath := imgEntity.Path
+	opts := []imaging.EncodeOption{}
+
+	f, err := os.Open(imgEntity.Path)
 	if err != nil {
-		log.Println("[ERROR] Could not open the image: ", img.Path, err)
+		log.Println("[ERROR] Could not open the image: ", imgEntity.Path, err)
 		return err
 	}
 	defer f.Close()
 
-	// TODO: use "bild" to make each one of this transformation... doing it
-	// by hand is kinda boring and I'm not into vector manipulation.
-	if transform.Watermark != nil {
-		// Do nothing for now...
-		println(img.Path)
-	}
-
-	if transform.Rotate != nil {
-		// Do nothing for now...
-		println(img.Path)
+	img, _, err := image.Decode(f)
+	if err != nil {
+		return errors.New("unsupported or invalid image")
 	}
 
 	if transform.Resize != nil {
-		// Do nothing for now...
-		println(img.Path)
+		img = imaging.Resize(
+			img,
+			transform.Resize.Width,
+			transform.Resize.Height,
+			imaging.Lanczos,
+		)
 	}
 
-	if transform.Mirror != nil {
-		// Do nothing for now...
-		println(img.Path)
+	// Need to validate the crop limites...
+	if transform.Crop != nil {
+		rect := image.Rect(
+			transform.Crop.X,
+			transform.Crop.Y,
+			transform.Crop.X+transform.Crop.Width,
+			transform.Crop.Y+transform.Crop.Height,
+		)
+		img = imaging.Crop(img, rect)
 	}
 
-	if transform.Format != nil {
-		// Do nothing for now...
-		println(img.Path)
+	if transform.Rotate != nil {
+		img = imaging.Rotate(img, float64(*transform.Rotate), color.Transparent)
+	}
+
+	if transform.Mirror != nil && *transform.Mirror {
+		img = imaging.FlipH(img)
 	}
 
 	if transform.Filters != nil {
-		// Do nothing for now...
-		println(img.Path)
+		if transform.Filters.Grayscale {
+			img = imaging.Grayscale(img)
+		}
+		if transform.Filters.Sepia {
+			img = imaging.AdjustSaturation(img, -100)
+			img = imaging.AdjustContrast(img, 10)
+		}
 	}
 
-	if transform.Crop != nil {
-		// Do nothing for now...
-		println(img.Path)
+	if transform.Watermark != nil && *transform.Watermark {
+		w := imaging.New(200, 40, color.NRGBA{0, 0, 0, 80})
+
+		img = imaging.Overlay(
+			img,
+			w,
+			image.Pt(
+				img.Bounds().Dx()-220,
+				img.Bounds().Dy()-60,
+			),
+			1.0,
+		)
 	}
 
 	if transform.Compress != nil {
-		// Do nothing for now...
-		println(img.Path)
+		switch *transform.Compress {
+		case "low":
+			opts = append(opts, imaging.JPEGQuality(40))
+		case "medium":
+			opts = append(opts, imaging.JPEGQuality(70))
+		case "high":
+			opts = append(opts, imaging.JPEGQuality(90))
+		}
 	}
 
-	panic("unimplemented")
+	if transform.Format != nil {
+		switch *transform.Format {
+		case "png":
+			outputPath = replaceExt(outputPath, ".png")
+			opts = append(opts, imaging.PNGCompressionLevel(png.BestCompression))
+		case "jpeg":
+			outputPath = replaceExt(outputPath, ".jpg")
+			opts = append(opts, imaging.JPEGQuality(85))
+		case "webp":
+			outputPath = replaceExt(outputPath, ".webp")
+		}
+	}
+
+	return imaging.Save(img, outputPath, opts...)
 }
 
 // UploadImage has a little (HUGE) problem, it uses the file name as their kinda "path"
@@ -168,7 +219,7 @@ func (i *imageService) TransformImage(transform *model.TransformReq) error {
 // of this new directory create a new file with the same name. That MAYBE be the solution.
 func (i *imageService) UploadImage(handler *multipart.FileHeader) (string, error) {
 	UUID := uuid.New()
-	name := path.Join(ImgDir, UUID.String(), handler.Filename)
+	dir := path.Join(ImgDir, UUID.String())
 
 	parts := strings.Split(handler.Filename, ".")
 	if len(parts) < 2 {
@@ -178,24 +229,33 @@ func (i *imageService) UploadImage(handler *multipart.FileHeader) (string, error
 
 	img := &model.ImageEntity{
 		UUID: UUID,
-		Path: name,
 
 		// I believe this should work believing that the last element in my
 		// array should be the file type.
 		Type: string(getImageType(parts[len(parts)-1])),
 	}
 
-	if err := os.Mkdir(name, DefaultPermDir); err != nil {
-		log.Printf("[ERROR] Could not create the directory %s, because: %s\n", name, err.Error())
+	if err := os.MkdirAll(dir, DefaultPermDir); err != nil {
+		log.Printf("[ERROR] Could not create the directory %s, because: %s\n", dir, err.Error())
 		return "", err
 	}
 
-	if err := os.WriteFile(name, nil, 1); err != nil {
-		log.Printf("[ERROR] Could not write the file: %s - %s\n", name, err.Error())
+	dstPath := path.Join(dir, handler.Filename)
+
+	img.Path = dstPath
+
+	dst, err := os.Create(dstPath)
+	if err != nil {
 		return "", err
 	}
+	defer dst.Close()
 
-	_, err := i.repo.UploadImage(img)
+	src, _ := handler.Open()
+	defer src.Close()
+
+	_, err = io.Copy(dst, src)
+
+	_, err = i.repo.UploadImage(img)
 	if err != nil {
 		return "", err
 	}
@@ -234,4 +294,8 @@ func getImageType(src string) imgType {
 		return JPG
 	}
 	return ""
+}
+
+func replaceExt(path, ext string) string {
+	return strings.TrimSuffix(path, filepath.Ext(path)) + ext
 }
