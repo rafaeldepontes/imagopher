@@ -269,12 +269,12 @@ func (i *imageService) UploadImage(handler *multipart.FileHeader) (string, error
 }
 
 func getImageType(src string) imgType {
-	jpegOption := map[string]bool{
-		"jpg":   true,
-		"jpeg":  true,
-		"jfif":  true,
-		"pjpeg": true,
-		"pjp":   true,
+	jpegOption := map[string]struct{}{
+		"jpg":   struct{}{},
+		"jpeg":  struct{}{},
+		"jfif":  struct{}{},
+		"pjpeg": struct{}{},
+		"pjp":   struct{}{},
 	}
 
 	switch src {
@@ -291,7 +291,7 @@ func getImageType(src string) imgType {
 	case string(WebP):
 		return WebP
 	}
-	if val := jpegOption[src]; val {
+	if _, has := jpegOption[src]; has {
 		return JPG
 	}
 	return ""
