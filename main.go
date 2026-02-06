@@ -10,13 +10,11 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/joho/godotenv"
 	"github.com/rafaeldepontes/imagopher/internal/application"
-	"github.com/rafaeldepontes/imagopher/internal/application/model"
-	"github.com/rafaeldepontes/imagopher/internal/database/postgres"
 	"github.com/rafaeldepontes/imagopher/internal/handler"
 	"github.com/rafaeldepontes/imagopher/internal/tool"
 )
 
-var app *model.Application
+var app application.Application
 
 func init() {
 	env := ".env"
@@ -50,16 +48,9 @@ func main() {
 
 	<-sigChan
 
-	if err := close(); err != nil {
+	if err := app.Shutdown(); err != nil {
 		log.Fatalf("[ERROR] Could not shutdown: %v\n", err)
 	}
 
 	log.Println("[INFO] Shutdown complete.")
-}
-
-func close() error {
-	if err := postgres.Close(); err != nil {
-		return err
-	}
-	return nil
 }
