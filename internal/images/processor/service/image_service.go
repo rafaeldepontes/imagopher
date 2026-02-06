@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"mime/multipart"
+	"net/http"
 	"os"
 	"path"
 	"path/filepath"
@@ -29,7 +30,7 @@ type imgType string
 
 const (
 	// Paths
-	ImgDir = "./public/uploads/"
+	ImgDir = "./internal/private/uploads/"
 
 	// Perms
 	DefaultPermDir = 0755
@@ -215,7 +216,7 @@ func (i *imageService) TransformImage(transform *model.TransformReq) error {
 //
 // My go to solution would be using the UUID name to create a new directory and inside
 // of this new directory create a new file with the same name. That MAYBE be the solution.
-func (i *imageService) UploadImage(handler *multipart.FileHeader) (string, error) {
+func (i *imageService) UploadImage(file multipart.File, handler *multipart.FileHeader) (string, error) {
 	UUID := uuid.New()
 	dir := path.Join(ImgDir, UUID.String())
 
@@ -225,8 +226,15 @@ func (i *imageService) UploadImage(handler *multipart.FileHeader) (string, error
 		return "", errors.New("File without a type...")
 	}
 
+	buffer := make([]byte, 512)
+
+	if _, err := file.Read(buffer); err != nil {
+		return "", err
+	}
+
 	img := &model.ImageEntity{
-		UUID: UUID,
+		UUID:     UUID,
+		MimeType: http.DetectContentType(buffer),
 
 		// I believe this should work believing that the last element in my
 		// array should be the file type.

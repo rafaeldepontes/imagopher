@@ -11,5 +11,5 @@ type Service interface {
 	FindImageByUUID(uuid string) (*model.ImageEntity, error)
 	FindImages() ([]model.ImageResp, error)
 	TransformImage(img *model.TransformReq) error
-	UploadImage(handler *multipart.FileHeader) (string, error)
+	UploadImage(file multipart.File, handler *multipart.FileHeader) (string, error)
 }

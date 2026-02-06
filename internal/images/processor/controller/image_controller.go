@@ -108,7 +108,7 @@ func (ic *imageController) UploadImage(w http.ResponseWriter, r *http.Request) {
 	defer f.Close()
 
 	// Sends the file over the service to be saved somewhere...
-	id, err := ic.imgSvc.UploadImage(handler)
+	id, err := ic.imgSvc.UploadImage(f, handler)
 	if err != nil {
 		http.Error(w, "Something went really bad", http.StatusInternalServerError)
 		return
