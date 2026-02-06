@@ -65,8 +65,6 @@ func (i *imageService) FindImageByID(id uint64) (*model.ImageEntity, error) {
 		return nil, err
 	}
 
-	// TODO: get the image from disk and sent it over.
-
 	return img, nil
 }
 
@@ -91,18 +89,22 @@ func (i *imageService) FindImageByUUID(body string) (*model.ImageEntity, error) 
 
 	i.cache.Add(body, img.ID, nil)
 
-	// TODO: get the image from disk and sent it over.
-
 	return img, nil
 }
 
 // FindImages implements [processor.Service].
-func (i *imageService) FindImages() ([]model.ImageEntity, error) {
+func (i *imageService) FindImages() ([]model.ImageResp, error) {
 	imgs, err := i.repo.FindImages()
 	if err != nil {
 		return nil, err
 	}
-	return imgs, nil
+
+	var imgResps []model.ImageResp
+	for i := range len(imgs) {
+		imgResps = append(imgResps, model.ImageResp{UUID: imgs[i].UUID})
+	}
+
+	return imgResps, nil
 }
 
 // TransformImage implements [processor.Service].
@@ -270,11 +272,11 @@ func (i *imageService) UploadImage(handler *multipart.FileHeader) (string, error
 
 func getImageType(src string) imgType {
 	jpegOption := map[string]struct{}{
-		"jpg":   struct{}{},
-		"jpeg":  struct{}{},
-		"jfif":  struct{}{},
-		"pjpeg": struct{}{},
-		"pjp":   struct{}{},
+		"jpg":   {},
+		"jpeg":  {},
+		"jfif":  {},
+		"pjpeg": {},
+		"pjp":   {},
 	}
 
 	switch src {

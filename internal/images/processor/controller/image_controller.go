@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/rafaeldepontes/imagopher/internal/images/model"
 	"github.com/rafaeldepontes/imagopher/internal/images/processor"
@@ -30,7 +31,6 @@ func (ic *imageController) FindImageByID(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// Sends the JSON to the service
 	img, err := ic.imgSvc.FindImageByUUID(param)
 	if err != nil {
 		log.Println("[ERROR] Could not find the image: ", err)
@@ -38,22 +38,22 @@ func (ic *imageController) FindImageByID(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// TODO: take care of the data here... Should not sent the whole image
-	// just the its bytes and some metadata, also the UUID for the frontend/
-	// API...
-	if err = json.NewEncoder(w).Encode(img); err != nil {
-		log.Println("[ERROR] Could not encode JSON: ", err)
-		http.Error(w, "Something went really bad", http.StatusInternalServerError)
+	f, err := os.Open(img.Path)
+	if err != nil {
+		log.Println("[ERROR] Could not open the image by its path: ", err)
+		http.NotFound(w, r)
 		return
 	}
+	defer f.Close()
 
-	// Returns the image and the correct http status...
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", img.MimeType)
+	w.Header().Set("Cache-Control", "public, max-age=86400") // 24h cache life.
+
+	http.ServeContent(w, r, "", img.CreatedAt, f)
 }
 
 // FindImages implements [processor.Controller].
 func (ic *imageController) FindImages(w http.ResponseWriter, r *http.Request) {
-	var imgs []model.ImageEntity
 	imgs, err := ic.imgSvc.FindImages()
 	if err != nil {
 		log.Println("[ERROR] Could not find the images: ", err)
@@ -88,8 +88,6 @@ func (ic *imageController) TransformImage(w http.ResponseWriter, r *http.Request
 		http.Error(w, "Something went really bad", http.StatusInternalServerError)
 		return
 	}
-
-	w.WriteHeader(http.StatusOK)
 }
 
 // UploadImage implements [processor.Controller].
