@@ -1,12 +1,18 @@
 package model
 
-import "github.com/google/uuid"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type ImageEntity struct {
-	ID   uint64    `json:"id"`
-	Path string    `json:"path"`
-	UUID uuid.UUID `json:"uuid"`
-	Type string    `json:"type"`
+	ID        uint64    `json:"id"`
+	Path      string    `json:"path"`
+	UUID      uuid.UUID `json:"uuid"`
+	Type      string    `json:"type"`
+	MimeType  string    `json:"mimeType"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
 // TransformReq has an UUID as their "id", this is a protection
