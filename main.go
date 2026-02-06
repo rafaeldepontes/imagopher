@@ -4,11 +4,14 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/joho/godotenv"
 	"github.com/rafaeldepontes/imagopher/internal/application"
 	"github.com/rafaeldepontes/imagopher/internal/application/model"
+	"github.com/rafaeldepontes/imagopher/internal/database/postgres"
 	"github.com/rafaeldepontes/imagopher/internal/handler"
 	"github.com/rafaeldepontes/imagopher/internal/tool"
 )
@@ -27,12 +30,36 @@ func init() {
 
 // TODO: Let's be real here... who needs an interface when you have the source code
 // and the cli using curl (or Postman... I like postman.).
+//
+// I'm changed my mind. I'll do something close to pinterest. (But still... None login needed).
 func main() {
 	port := os.Getenv("PORT")
 
 	r := chi.NewRouter()
 	handler.Routes(r, app)
 
-	log.Printf("Application running on %s\n", "localhost:"+port)
-	log.Fatalln(http.ListenAndServe(":"+port, r))
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		log.Printf("[INFO] Application running on %s\n", "localhost:"+port)
+		log.Fatalln("[ERROR] ", http.ListenAndServe(":"+port, r))
+	}()
+
+	log.Println("[INFO] Received shutdown signal. Shutting down...")
+
+	<-sigChan
+
+	if err := close(); err != nil {
+		log.Fatalf("[ERROR] Could not shutdown: %v\n", err)
+	}
+
+	log.Println("[INFO] Shutdown complete.")
+}
+
+func close() error {
+	if err := postgres.Close(); err != nil {
+		return err
+	}
+	return nil
 }

@@ -5,9 +5,9 @@ import (
 	"log"
 
 	"github.com/google/uuid"
+	"github.com/rafaeldepontes/imagopher/internal/database/postgres"
 	"github.com/rafaeldepontes/imagopher/internal/images/model"
 	"github.com/rafaeldepontes/imagopher/internal/images/processor"
-	"github.com/rafaeldepontes/imagopher/pkg/database/postgres"
 )
 
 // TODO: check how to save the images, a BLOB storage would be

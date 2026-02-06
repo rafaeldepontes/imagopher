@@ -18,6 +18,10 @@ func GetDB() *sql.DB {
 	return db
 }
 
+func Close() error {
+	return db.Close()
+}
+
 func initDB() error {
 	database, err := sql.Open("pgx", os.Getenv("DATABASE_URL"))
 	if err != nil {
