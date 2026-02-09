@@ -13,12 +13,12 @@ type data[T any] struct {
 }
 
 type imgCache[T any] struct {
-	memory map[string]data[T]
+	memory map[string]*data[T]
 }
 
 func NewCache[T any]() cache.Cache[string, T] {
 	return &imgCache[T]{
-		memory: make(map[string]data[T]),
+		memory: make(map[string]*data[T]),
 	}
 }
 
@@ -33,7 +33,7 @@ func (i *imgCache[T]) Add(key string, value T, duration *time.Duration) {
 		expiresAt = expiresAt.Add(*duration)
 	}
 
-	i.memory[key] = data[T]{
+	i.memory[key] = &data[T]{
 		value:     value,
 		expiresAt: expiresAt,
 	}
