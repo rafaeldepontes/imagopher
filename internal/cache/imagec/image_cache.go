@@ -28,9 +28,9 @@ func (i *imgCache[T]) Add(key string, value T, duration *time.Duration) {
 
 	var defaultDuration *time.Duration = getPtr((time.Duration)(cache.DefaultDuration))
 	if duration == nil {
-		expiresAt = expiresAt.Add(*defaultDuration)
+		expiresAt = expiresAt.Add(*defaultDuration * time.Minute)
 	} else {
-		expiresAt = expiresAt.Add(*duration)
+		expiresAt = expiresAt.Add(*duration * time.Minute)
 	}
 
 	i.memory[key] = &data[T]{
