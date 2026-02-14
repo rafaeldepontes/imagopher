@@ -32,15 +32,15 @@ func NewRepository() processor.Repository {
 func (i *imageRepository) FindImageByID(id uint64) (*model.ImageEntity, error) {
 	img := &model.ImageEntity{}
 
-	query := "SELECT id, path, type, mimeType, createdAt, uuid FROM images img WHERE img.id = ?"
+	query := "SELECT id, path, type, mimeType, created_at, uuid FROM images img WHERE img.id = $1"
 
 	if err := i.db.QueryRow(query, id).Scan(
-		img.ID,
-		img.Path,
-		img.Type,
-		img.MimeType,
-		img.CreatedAt,
-		img.UUID,
+		&img.ID,
+		&img.Path,
+		&img.Type,
+		&img.MimeType,
+		&img.CreatedAt,
+		&img.UUID,
 	); err != nil {
 		log.Println("[ERROR] Could not complete the scan:", err)
 		return nil, err
@@ -53,15 +53,15 @@ func (i *imageRepository) FindImageByID(id uint64) (*model.ImageEntity, error) {
 func (i *imageRepository) FindImageByUUID(id uuid.UUID) (*model.ImageEntity, error) {
 	img := &model.ImageEntity{}
 
-	query := "SELECT id, path, type, mimeType, createdAt, uuid FROM images img WHERE img.uuid = ?"
+	query := "SELECT id, path, type, mimeType, created_at, uuid FROM images i WHERE i.uuid = $1"
 
 	if err := i.db.QueryRow(query, id).Scan(
-		img.ID,
-		img.Path,
-		img.Type,
-		img.MimeType,
-		img.CreatedAt,
-		img.UUID,
+		&img.ID,
+		&img.Path,
+		&img.Type,
+		&img.MimeType,
+		&img.CreatedAt,
+		&img.UUID,
 	); err != nil {
 		log.Println("[ERROR] Could not complete the scan:", err)
 		return nil, err
@@ -74,7 +74,7 @@ func (i *imageRepository) FindImageByUUID(id uuid.UUID) (*model.ImageEntity, err
 func (i *imageRepository) FindImages() ([]model.ImageEntity, error) {
 	var imgs []model.ImageEntity
 
-	query := "SELECT id, path, type, mimeType, createdAt, uuid FROM images;"
+	query := "SELECT id, path, type, mimeType, created_at, uuid FROM images;"
 
 	rows, err := i.db.Query(query)
 	if err != nil {
@@ -109,20 +109,19 @@ func (i *imageRepository) FindImages() ([]model.ImageEntity, error) {
 }
 
 func (i *imageRepository) UploadImage(img *model.ImageEntity) (uint64, error) {
-	query := "INSERT INTO images (path, type, mimeType, uuid) VALUES ($1, $2, $3, $4);"
+	query := "INSERT INTO images (path, type, mimeType, uuid) VALUES ($1, $2, $3, $4) RETURNING id;"
 
-	_, err := i.db.Exec(query, img.Path, img.Type, img.MimeType, img.UUID)
-	if err != nil {
+	var id uint64
+	if err := i.db.QueryRow(
+		query,
+		img.Path,
+		img.Type,
+		img.MimeType,
+		img.UUID,
+	).Scan(&id); err != nil {
 		log.Println("[ERROR] Could not insert the new image:", err)
 		return 0, err
 	}
 
-	// NO SUPPORT.
-	// id, err := result.LastInsertId()
-	// if err != nil {
-	// 	log.Println("[ERROR] Could not extract the last inserted ID:", err)
-	// 	return 0, nil
-	// }
-	// return uint64(id), nil
-	return 0, nil
+	return id, nil
 }

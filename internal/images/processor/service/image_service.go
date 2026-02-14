@@ -30,7 +30,7 @@ type imgType string
 
 const (
 	// Paths
-	ImgDir = "./internal/private/uploads/"
+	ImgDir = "./private/uploads/"
 
 	// Perms
 	DefaultPermDir = 0755
@@ -266,14 +266,11 @@ func (i *imageService) UploadImage(file multipart.File, handler *multipart.FileH
 		return "", err
 	}
 
-	_, err = i.repo.UploadImage(img)
+	id, err := i.repo.UploadImage(img)
 	if err != nil {
 		return "", err
 	}
-
-	// This would be sweet to have, but unfortunately pgx doesn't have
-	// support for LastInsertId... So this line is useless for now.
-	// i.cache.Add(img.UUID.String(), id, nil)
+	i.cache.Add(img.UUID.String(), id, nil)
 
 	return img.UUID.String(), err
 }
