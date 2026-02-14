@@ -18,7 +18,7 @@ type ImageEntity struct {
 // TransformReq has an UUID as their "id", this is a protection
 // to not expose the REAL id from the database...
 type TransformReq struct {
-	UUID uuid.UUID `json:"id"`
+	UUID string `json:"id"`
 
 	Resize    *ResizeOptions `json:"resize,omitempty"`
 	Crop      *CropOptions   `json:"crop,omitempty"`
