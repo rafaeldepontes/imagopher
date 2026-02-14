@@ -19,9 +19,7 @@ var app application.Application
 func init() {
 	env := ".env"
 	tool.ChecksEnv(&env)
-	if err := godotenv.Load(env); err != nil {
-		log.Fatalln("[ERROR] Couldn't load the env variable:", err)
-	}
+	_ = godotenv.Load(env)
 
 	app = application.NewApplication()
 }
@@ -37,7 +35,7 @@ func main() {
 	handler.Routes(r, app)
 
 	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGSEGV)
 
 	go func() {
 		log.Printf("[INFO] Application running on %s\n", "localhost:"+port)
