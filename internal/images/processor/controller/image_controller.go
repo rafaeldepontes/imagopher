@@ -24,7 +24,7 @@ func NewController() processor.Controller {
 // FindImageById implements [processor.Controller].
 func (ic *imageController) FindImageByID(w http.ResponseWriter, r *http.Request) {
 	// Unmarshal the request body...
-	param := r.URL.Query().Get("id")
+	param := r.PathValue("id")
 	if param == "" {
 		log.Println("[ERROR] Id not present")
 		http.Error(w, "Id is missing", http.StatusBadRequest)
@@ -75,15 +75,15 @@ func (ic *imageController) FindImages(w http.ResponseWriter, r *http.Request) {
 // TransformImage implements [processor.Controller].
 func (ic *imageController) TransformImage(w http.ResponseWriter, r *http.Request) {
 	// Unmarshal the body
-	var transform *model.TransformReq
-	if err := json.NewDecoder(r.Body).Decode(transform); err != nil {
+	var transform model.TransformReq
+	if err := json.NewDecoder(r.Body).Decode(&transform); err != nil {
 		log.Println("[ERROR] Could not decode the json:", err)
 		http.Error(w, "Something went really bad", http.StatusInternalServerError)
 		return
 	}
 
 	// Sends it over and hope for the best...
-	if err := ic.imgSvc.TransformImage(transform); err != nil {
+	if err := ic.imgSvc.TransformImage(&transform); err != nil {
 		log.Println("[ERROR] Could not transform the imagem: ", err)
 		http.Error(w, "Something went really bad", http.StatusInternalServerError)
 		return
@@ -114,6 +114,9 @@ func (ic *imageController) UploadImage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.WriteHeader(http.StatusCreated)
+	w.Header().Set("Content-Type", "application/json")
+
 	if err = json.NewEncoder(w).Encode(map[string]string{
 		"id": id,
 	}); err != nil {
@@ -121,7 +124,4 @@ func (ic *imageController) UploadImage(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Something went really bad", http.StatusInternalServerError)
 		return
 	}
-
-	w.WriteHeader(http.StatusCreated)
-	w.Header().Set("Content-Type", "application/json")
 }

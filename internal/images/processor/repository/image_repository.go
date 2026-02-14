@@ -122,6 +122,5 @@ func (i *imageRepository) UploadImage(img *model.ImageEntity) (uint64, error) {
 		log.Println("[ERROR] Could not insert the new image:", err)
 		return 0, err
 	}
-
 	return id, nil
 }
