@@ -14,6 +14,7 @@ FROM gcr.io/distroless/static-debian12
 WORKDIR /
 
 COPY --from=build /app /app
+COPY --chown=nonroot:nonroot ./private /private
 
 USER nonroot:nonroot
 
