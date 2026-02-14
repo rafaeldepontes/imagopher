@@ -13,6 +13,6 @@ func MapImageRoutes(r *chi.Mux, c processor.Controller) {
 	r.Get("/images", c.FindImages)
 
 	r.Post("/images", c.UploadImage)
-	r.Post("/images/:id/transform", c.TransformImage)
-	r.Get("/images/:id", c.FindImageByID)
+	r.Post("/images/{id}/transform", c.TransformImage)
+	r.Get("/images/{id}", c.FindImageByID)
 }
