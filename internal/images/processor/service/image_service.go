@@ -110,7 +110,7 @@ func (i *imageService) FindImages() ([]model.ImageResp, error) {
 
 // TransformImage implements [processor.Service].
 func (i *imageService) TransformImage(transform *model.TransformReq) error {
-	imgEntity, err := i.FindImageByUUID(transform.UUID.String())
+	imgEntity, err := i.FindImageByUUID(transform.UUID)
 	if err != nil {
 		return err
 	}
