@@ -13,16 +13,16 @@ import (
 	cursorMdl "github.com/rafaeldepontes/imagopher/internal/cursor/model"
 )
 
-type cursorService[T any] struct {
+type cursorService struct {
 	secretKey []byte
 	sigLen    int
 }
 
-func NewCursorService[T any]() *cursorService[T] {
+func NewService() *cursorService {
 	sigLenStr := os.Getenv("SIGNATURE_LENGTH")
 	sigLen, _ := strconv.Atoi(sigLenStr)
 
-	return &cursorService[T]{
+	return &cursorService{
 		secretKey: []byte(os.Getenv("SECRET_CURSOR_KEY")),
 		sigLen:    sigLen,
 	}
@@ -31,7 +31,7 @@ func NewCursorService[T any]() *cursorService[T] {
 // Encode accepts a generic T type, a slice of any data, a size of records per page and
 // the next page being a pointer to the next id in the database and it will return a hash
 // with all the information needed in the next request for security.
-func (s *cursorService[T]) Encode(size int, nextCursor uint64) (string, error) {
+func (s *cursorService) Encode(size int, nextCursor uint64) (string, error) {
 	rawData := cursorMdl.CursorBody{
 		Size:       size,
 		NextCursor: nextCursor,
@@ -54,7 +54,7 @@ func (s *cursorService[T]) Encode(size int, nextCursor uint64) (string, error) {
 
 // Decode accepts a hashed source to decode, it will return the CursorPagination with the
 // T type generic specified previously and an error if any.
-func (s *cursorService[T]) Decode(src string) (*cursorMdl.CursorBody, error) {
+func (s *cursorService) Decode(src string) (*cursorMdl.CursorBody, error) {
 	combined, err := base64.RawURLEncoding.DecodeString(src)
 	if err != nil {
 		return nil, err
@@ -76,7 +76,7 @@ func (s *cursorService[T]) Decode(src string) (*cursorMdl.CursorBody, error) {
 	}
 
 	cursorModel := new(cursorMdl.CursorBody)
-	json.Unmarshal(jsonBody, cursorModel)
+	_ = json.Unmarshal(jsonBody, cursorModel)
 
 	return cursorModel, nil
 }
