@@ -22,6 +22,8 @@ import (
 	"github.com/rafaeldepontes/imagopher/internal/cache"
 	"github.com/rafaeldepontes/imagopher/internal/cache/imagec"
 	"github.com/rafaeldepontes/imagopher/internal/images/model"
+	pageSvc "github.com/rafaeldepontes/imagopher/internal/cursor/service"
+	"github.com/rafaeldepontes/imagopher/internal/cursor"
 	"github.com/rafaeldepontes/imagopher/internal/images/processor"
 	"github.com/rafaeldepontes/imagopher/internal/images/processor/repository"
 )
@@ -47,12 +49,14 @@ const (
 
 type imageService struct {
 	repo  processor.Repository
+	pagination cursor.Page
 	cache cache.Cache[string, uint64]
 }
 
 func NewService() processor.Service {
 	return &imageService{
 		repo:  repository.NewRepository(),
+		pagination: pageSvc.NewService(),
 		cache: imagec.NewCache[uint64](),
 	}
 }
@@ -94,18 +98,27 @@ func (i *imageService) FindImageByUUID(body string) (*model.ImageEntity, error) 
 }
 
 // FindImages implements [processor.Service].
-func (i *imageService) FindImages() ([]model.ImageResp, error) {
+func (i *imageService) FindImages() (*model.ImageResp, error) {
 	imgs, err := i.repo.FindImages()
 	if err != nil {
 		return nil, err
 	}
 
-	var imgResps []model.ImageResp
-	for i := range len(imgs) {
-		imgResps = append(imgResps, model.ImageResp{UUID: imgs[i].UUID})
+	var imgDTOs []model.ImageDTO
+	for i := range imgs {
+		imgDTOs = append(imgDTOs, model.ImageDTO{UUID: imgs[i].UUID})
 	}
 
-	return imgResps, nil
+	page, err := i.pagination.Encode(size, nextCursor)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &model.ImageResp{
+		Data: imgDTOs,
+		Page: page,
+	}
+	return resp, nil
 }
 
 // TransformImage implements [processor.Service].

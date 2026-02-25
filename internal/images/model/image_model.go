@@ -47,6 +47,11 @@ type FilterOptions struct {
 	Sepia     bool `json:"sepia,omitempty"`
 }
 
-type ImageResp struct {
+type ImageDTO struct {
 	UUID uuid.UUID `json:"id"`
+}
+
+type ImageResp struct {
+	Data []ImageDTO `json:"data"`
+	Page string     `json:"page"`
 }

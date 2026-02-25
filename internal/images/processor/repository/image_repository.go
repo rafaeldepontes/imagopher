@@ -71,7 +71,7 @@ func (i *imageRepository) FindImageByUUID(id uuid.UUID) (*model.ImageEntity, err
 
 // FindImages returns the list of all images in the database, it should have a
 // cursor pagination allowing a BLAZING FAST queries to the Database... (Node.Js moment)
-func (i *imageRepository) FindImages() ([]model.ImageEntity, error) {
+func (i *imageRepository) FindImages(size int, nextCursor uint64) ([]model.ImageEntity, error) {
 	var imgs []model.ImageEntity
 
 	query := "SELECT id, path, type, mimeType, created_at, uuid FROM images;"
