@@ -21,9 +21,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/rafaeldepontes/imagopher/internal/cache"
 	"github.com/rafaeldepontes/imagopher/internal/cache/imagec"
-	"github.com/rafaeldepontes/imagopher/internal/images/model"
-	pageSvc "github.com/rafaeldepontes/imagopher/internal/cursor/service"
 	"github.com/rafaeldepontes/imagopher/internal/cursor"
+	cursorModel "github.com/rafaeldepontes/imagopher/internal/cursor/model"
+	pageSvc "github.com/rafaeldepontes/imagopher/internal/cursor/service"
+	imgModel "github.com/rafaeldepontes/imagopher/internal/images/model"
 	"github.com/rafaeldepontes/imagopher/internal/images/processor"
 	"github.com/rafaeldepontes/imagopher/internal/images/processor/repository"
 )
@@ -45,24 +46,27 @@ const (
 	AVIF imgType = "avif"
 	SVG  imgType = "svg"
 	WebP imgType = "webp"
+
+	// Defaults
+	DefaultCursorSize = 10
 )
 
 type imageService struct {
-	repo  processor.Repository
+	repo       processor.Repository
 	pagination cursor.Page
-	cache cache.Cache[string, uint64]
+	cache      cache.Cache[string, uint64]
 }
 
 func NewService() processor.Service {
 	return &imageService{
-		repo:  repository.NewRepository(),
+		repo:       repository.NewRepository(),
 		pagination: pageSvc.NewService(),
-		cache: imagec.NewCache[uint64](),
+		cache:      imagec.NewCache[uint64](),
 	}
 }
 
 // FindImageByID implements [processor.Service].
-func (i *imageService) FindImageByID(id uint64) (*model.ImageEntity, error) {
+func (i *imageService) FindImageByID(id uint64) (*imgModel.ImageEntity, error) {
 	log.Printf("[INFO] Searchig for an image by it's ID: %d\n", id)
 
 	img, err := i.repo.FindImageByID(id)
@@ -73,7 +77,7 @@ func (i *imageService) FindImageByID(id uint64) (*model.ImageEntity, error) {
 	return img, nil
 }
 
-func (i *imageService) FindImageByUUID(body string) (*model.ImageEntity, error) {
+func (i *imageService) FindImageByUUID(body string) (*imgModel.ImageEntity, error) {
 	if data, has := i.cache.Get(body); has {
 		log.Println("[INFO] UUID found in cache, using ID instead")
 		return i.FindImageByID(data)
@@ -98,23 +102,31 @@ func (i *imageService) FindImageByUUID(body string) (*model.ImageEntity, error) 
 }
 
 // FindImages implements [processor.Service].
-func (i *imageService) FindImages() (*model.ImageResp, error) {
-	imgs, err := i.repo.FindImages()
+func (i *imageService) FindImages(cursorReq cursorModel.CursorBody) (*imgModel.ImageResp, error) {
+	if cursorReq.Size < 1 {
+		return nil, errors.New("Invalid cursor size")
+	}
+
+	if cursorReq.NextCursor == 0 {
+		return nil, errors.New("Invalid next cursor")
+	}
+
+	imgs, err := i.repo.FindImages(cursorReq.Size, cursorReq.NextCursor)
 	if err != nil {
 		return nil, err
 	}
 
-	var imgDTOs []model.ImageDTO
+	var imgDTOs []imgModel.ImageDTO
 	for i := range imgs {
-		imgDTOs = append(imgDTOs, model.ImageDTO{UUID: imgs[i].UUID})
+		imgDTOs = append(imgDTOs, imgModel.ImageDTO{UUID: imgs[i].UUID})
 	}
 
-	page, err := i.pagination.Encode(size, nextCursor)
+	page, err := i.pagination.Encode(cursorReq.Size+DefaultCursorSize, cursorReq.NextCursor+DefaultCursorSize)
 	if err != nil {
 		return nil, err
 	}
 
-	resp := &model.ImageResp{
+	resp := &imgModel.ImageResp{
 		Data: imgDTOs,
 		Page: page,
 	}
@@ -122,7 +134,7 @@ func (i *imageService) FindImages() (*model.ImageResp, error) {
 }
 
 // TransformImage implements [processor.Service].
-func (i *imageService) TransformImage(transform *model.TransformReq) error {
+func (i *imageService) TransformImage(transform *imgModel.TransformReq) error {
 	imgEntity, err := i.FindImageByUUID(transform.UUID)
 	if err != nil {
 		return err
@@ -245,7 +257,7 @@ func (i *imageService) UploadImage(file multipart.File, handler *multipart.FileH
 		return "", err
 	}
 
-	img := &model.ImageEntity{
+	img := &imgModel.ImageEntity{
 		UUID:     UUID,
 		MimeType: http.DetectContentType(buffer),
 

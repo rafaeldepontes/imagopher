@@ -6,7 +6,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/rafaeldepontes/imagopher/internal/images/model"
+	cursorModel "github.com/rafaeldepontes/imagopher/internal/cursor/model"
+	imgModel "github.com/rafaeldepontes/imagopher/internal/images/model"
 	"github.com/rafaeldepontes/imagopher/internal/images/processor"
 	"github.com/rafaeldepontes/imagopher/internal/images/processor/service"
 )
@@ -54,7 +55,14 @@ func (ic *imageController) FindImageByID(w http.ResponseWriter, r *http.Request)
 
 // FindImages implements [processor.Controller].
 func (ic *imageController) FindImages(w http.ResponseWriter, r *http.Request) {
-	imgs, err := ic.imgSvc.FindImages()
+	var cursorReq cursorModel.CursorBody
+	if err := json.NewDecoder(r.Body).Decode(&cursorReq); err != nil {
+		log.Println("[ERROR] Could not parse the request body: ", err)
+		http.Error(w, "Something went really bad", http.StatusBadRequest)
+		return
+	}
+
+	imgs, err := ic.imgSvc.FindImages(cursorReq)
 	if err != nil {
 		log.Println("[ERROR] Could not find the images: ", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -75,7 +83,7 @@ func (ic *imageController) FindImages(w http.ResponseWriter, r *http.Request) {
 // TransformImage implements [processor.Controller].
 func (ic *imageController) TransformImage(w http.ResponseWriter, r *http.Request) {
 	// Unmarshal the body
-	var transform model.TransformReq
+	var transform imgModel.TransformReq
 	if err := json.NewDecoder(r.Body).Decode(&transform); err != nil {
 		log.Println("[ERROR] Could not decode the json:", err)
 		http.Error(w, "Something went really bad", http.StatusInternalServerError)
@@ -102,7 +110,7 @@ func (ic *imageController) UploadImage(w http.ResponseWriter, r *http.Request) {
 	f, handler, err := r.FormFile("image")
 	if err != nil {
 		log.Println("[ERROR] Could not get the image file: ", err)
-		http.Error(w, "Something really bad happened...", http.StatusInternalServerError)
+		http.Error(w, "Something really bad", http.StatusInternalServerError)
 		return
 	}
 	defer f.Close()
