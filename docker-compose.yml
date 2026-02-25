@@ -15,6 +15,33 @@ services:
       - postgres:/var/lib/postgresql/data
       - ./scripts:/docker-entrypoint-initdb.d
 
+  # localstack:
+  #   image: localstack/localstack:latest
+  #   ports:
+  #     - "4566:4566"
+  #     - "4571:4571"
+  #   environment:
+  #     - SERVICES=s3
+  #     - DEBUG=1
+  #   volumes:
+  #     - "/var/run/docker.sock:/var/run/docker.sock"
+
+  # bucket_creator:
+  #   image: amazon/aws_cli
+  #   entrypoint: /bin/sh -c "sleep 5; aws --no-sign-request --region us-east-1 --endpoint-url:http://localstack:4566 s3 mb s3://photo-bucket"
+  #   depends_on:
+  #     - localstack
+
+  # uploader:
+  #   build: .
+  #   environment:
+  #     - AWS_REGION=us-east-1
+  #     - AWS_ACCESS_KEY_ID=test
+  #     - AWS_SECRET_ACCESS_KEY=test
+  #     - AWS_ENDPOINT="http://localstack:4566"
+  #   depends_on:
+  #     - bucket_creator
+
   golang-project:
     container_name: "my-project"
     build:
