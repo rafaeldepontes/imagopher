@@ -8,7 +8,7 @@ import (
 )
 
 type Service interface {
-	FindImageByID(id uint64) (*imgModel.ImageEntity, error)
+	FindImageByID(id *uint64) (*imgModel.ImageEntity, error)
 	FindImageByUUID(uuid string) (*imgModel.ImageEntity, error)
 	FindImages(cursorReq cursorModel.CursorBody) (*imgModel.ImageResp, error)
 	TransformImage(img *imgModel.TransformReq) error

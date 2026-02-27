@@ -31,7 +31,7 @@ func NewService() *cursorService {
 // Encode accepts a generic T type, a slice of any data, a size of records per page and
 // the next page being a pointer to the next id in the database and it will return a hash
 // with all the information needed in the next request for security.
-func (s *cursorService) Encode(size int, nextCursor uint64) (string, error) {
+func (s *cursorService) Encode(size int, nextCursor *uint64) (string, error) {
 	rawData := cursorMdl.CursorBody{
 		Size:       size,
 		NextCursor: nextCursor,

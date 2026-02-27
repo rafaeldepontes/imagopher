@@ -54,19 +54,19 @@ const (
 type imageService struct {
 	repo       processor.Repository
 	pagination cursor.Page
-	cache      cache.Cache[string, uint64]
+	cache      cache.Cache[string, *uint64]
 }
 
 func NewService() processor.Service {
 	return &imageService{
 		repo:       repository.NewRepository(),
 		pagination: pageSvc.NewService(),
-		cache:      imagec.NewCache[uint64](),
+		cache:      imagec.NewCache[*uint64](),
 	}
 }
 
 // FindImageByID implements [processor.Service].
-func (i *imageService) FindImageByID(id uint64) (*imgModel.ImageEntity, error) {
+func (i *imageService) FindImageByID(id *uint64) (*imgModel.ImageEntity, error) {
 	log.Printf("[INFO] Searchig for an image by it's ID: %d\n", id)
 
 	img, err := i.repo.FindImageByID(id)
@@ -96,7 +96,7 @@ func (i *imageService) FindImageByUUID(body string) (*imgModel.ImageEntity, erro
 		return nil, err
 	}
 
-	i.cache.Add(body, img.ID, nil)
+	i.cache.Add(body, new(img.ID), nil)
 
 	return img, nil
 }
@@ -121,7 +121,10 @@ func (i *imageService) FindImages(cursorReq cursorModel.CursorBody) (*imgModel.I
 		imgDTOs = append(imgDTOs, imgModel.ImageDTO{UUID: imgs[i].UUID})
 	}
 
-	page, err := i.pagination.Encode(cursorReq.Size+DefaultCursorSize, cursorReq.NextCursor+DefaultCursorSize)
+	page, err := i.pagination.Encode(
+		cursorReq.Size+DefaultCursorSize,
+		new(*cursorReq.NextCursor+DefaultCursorSize),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -230,7 +233,6 @@ func (i *imageService) TransformImage(transform *imgModel.TransformReq) error {
 			outputPath = replaceExt(outputPath, ".webp")
 		}
 	}
-
 	return imaging.Save(img, outputPath, opts...)
 }
 
@@ -295,7 +297,7 @@ func (i *imageService) UploadImage(file multipart.File, handler *multipart.FileH
 	if err != nil {
 		return "", err
 	}
-	i.cache.Add(img.UUID.String(), id, nil)
+	i.cache.Add(img.UUID.String(), id)
 
 	return img.UUID.String(), err
 }
