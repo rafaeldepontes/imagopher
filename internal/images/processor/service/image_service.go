@@ -96,19 +96,16 @@ func (i *imageService) FindImageByUUID(body string) (*imgModel.ImageEntity, erro
 		return nil, err
 	}
 
-	i.cache.Add(body, new(img.ID), nil)
+	i.cache.Add(body, new(img.ID))
 
 	return img, nil
 }
 
 // FindImages implements [processor.Service].
 func (i *imageService) FindImages(cursorReq cursorModel.CursorBody) (*imgModel.ImageResp, error) {
-	if cursorReq.Size < 1 {
-		return nil, errors.New("Invalid cursor size")
-	}
-
-	if cursorReq.NextCursor == 0 {
-		return nil, errors.New("Invalid next cursor")
+	if err := validateCursorBody(cursorReq); err != nil {
+		log.Println("[INFO] Invalid cursor body:", err)
+		return nil, err
 	}
 
 	imgs, err := i.repo.FindImages(cursorReq.Size, cursorReq.NextCursor)
@@ -146,16 +143,9 @@ func (i *imageService) TransformImage(transform *imgModel.TransformReq) error {
 	outputPath := imgEntity.Path
 	opts := []imaging.EncodeOption{}
 
-	f, err := os.Open(imgEntity.Path)
+	img, err := getImage(outputPath)
 	if err != nil {
-		log.Println("[ERROR] Could not open the image: ", imgEntity.Path, err)
 		return err
-	}
-	defer f.Close()
-
-	img, _, err := image.Decode(f)
-	if err != nil {
-		return errors.New("unsupported or invalid image")
 	}
 
 	if transform.Resize != nil {
@@ -333,4 +323,32 @@ func getImageType(src string) imgType {
 
 func replaceExt(path, ext string) string {
 	return strings.TrimSuffix(path, filepath.Ext(path)) + ext
+}
+
+func validateCursorBody(body cursorModel.CursorBody) error {
+	if body.Size < 1 {
+		return errors.New("Invalid cursor size")
+	}
+
+	if body.NextCursor == nil {
+		return errors.New("Invalid next cursor")
+	}
+
+	return nil
+}
+
+func getImage(path string) (image.Image, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		log.Println("[ERROR] Could not open the image: ", path, err)
+		return nil, err
+	}
+	defer f.Close()
+
+	img, _, err := image.Decode(f)
+	if err != nil {
+		log.Println("[ERROR] Image not supported somehow...:", err)
+		return nil, errors.New("Unsupported or invalid image")
+	}
+	return img, nil
 }
