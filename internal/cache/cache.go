@@ -13,9 +13,12 @@ const DefaultDuration = 15
 // to avoid case miss... So "A" and "a" gives the same value.
 type Cache[K comparable, T any] interface {
 
+	// Add adds something to cache for 15 minutes.
+	Add(key K, value T)
+
 	// Add adds something to cache, with no TLS were specified it will use the
 	// default value of 15 minutes.
-	Add(key K, value T, time *time.Duration)
+	AddWithTLS(key K, value T, time *time.Duration)
 
 	// Set updates the cache value and also refresh the TLS, if the TLS were
 	// expired then it removes the old value and create a new one...

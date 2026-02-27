@@ -22,11 +22,15 @@ func NewCache[T any]() cache.Cache[string, T] {
 	}
 }
 
+func (i *imgCache[T]) Add(key string, value T) {
+	i.AddWithTLS(key, value, nil)
+}
+
 // Add implements [cache.Cache].
-func (i *imgCache[T]) Add(key string, value T, duration *time.Duration) {
+func (i *imgCache[T]) AddWithTLS(key string, value T, duration *time.Duration) {
 	expiresAt := time.Now()
 
-	var defaultDuration *time.Duration = getPtr((time.Duration)(cache.DefaultDuration))
+	var defaultDuration *time.Duration = new((time.Duration)(cache.DefaultDuration))
 	if duration == nil {
 		expiresAt = expiresAt.Add(*defaultDuration * time.Minute)
 	} else {
@@ -74,22 +78,18 @@ func (i *imgCache[T]) Remove(key string) {
 func (i *imgCache[T]) Set(key string, value T) {
 	data, has := i.memory[key]
 	if !has {
-		i.Add(key, value, nil)
+		i.Add(key, value)
 		return
 	}
 
 	if data.expiresAt.Before(time.Now()) {
 		i.Remove(key)
-		i.Add(key, value, nil)
+		i.Add(key, value)
 		return
 	}
 
 	data.value = value
 	data.expiresAt = time.Now().Add(cache.DefaultDuration)
-}
-
-func getPtr[T any](val T) *T {
-	return &val
 }
 
 func zeroVal[T any]() T {
