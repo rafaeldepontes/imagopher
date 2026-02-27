@@ -157,7 +157,7 @@ func (i *imageService) TransformImage(transform *imgModel.TransformReq) error {
 		)
 	}
 
-	// TODO: need to create a validation for the crop limites...
+	// TODO: need to create a validation for the crop limits...
 	if transform.Crop != nil {
 		rect := image.Rect(
 			transform.Crop.X,
