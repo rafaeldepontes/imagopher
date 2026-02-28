@@ -35,7 +35,7 @@ func main() {
 	handler.Routes(r, app)
 
 	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGSEGV)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
 		log.Printf("[INFO] Application running on %s\n", "localhost:"+port)
