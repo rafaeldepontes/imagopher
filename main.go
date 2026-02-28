@@ -42,10 +42,9 @@ func main() {
 		log.Fatalln("[ERROR] ", http.ListenAndServe(":"+port, r))
 	}()
 
-	log.Println("[INFO] Received shutdown signal. Shutting down...")
-
 	<-sigChan
 
+	log.Println("[INFO] Received shutdown signal. Shutting down...")
 	if err := app.Shutdown(); err != nil {
 		log.Fatalf("[ERROR] Could not shutdown: %v\n", err)
 	}
