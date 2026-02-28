@@ -30,7 +30,7 @@ const (
 	WebP imgType = "webp"
 
 	// Defaults
-	DefaultCursorSize = 10
+	DefaultCursorID = 10
 )
 
 func getImageType(src string) imgType {
@@ -66,16 +66,21 @@ func replaceExt(path, ext string) string {
 	return strings.TrimSuffix(path, filepath.Ext(path)) + ext
 }
 
-func validateCursorBody(body cursorModel.CursorBody) error {
+func validateCursorBody(i *imageService, cursor string) (*cursorModel.CursorBody, error) {
+	body, err := i.pagination.Decode(cursor)
+	if err != nil {
+		return nil, err
+	}
+
 	if body.Size < 1 {
-		return errors.New("Invalid cursor size")
+		return nil, errors.New("Invalid cursor size")
 	}
 
 	if body.NextCursor == nil {
-		return errors.New("Invalid next cursor")
+		return nil, errors.New("Invalid next cursor")
 	}
 
-	return nil
+	return body, nil
 }
 
 func getImage(path string) (image.Image, error) {

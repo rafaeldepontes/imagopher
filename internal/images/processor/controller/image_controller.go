@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 
-	cursorModel "github.com/rafaeldepontes/imagopher/internal/cursor/model"
 	imgModel "github.com/rafaeldepontes/imagopher/internal/images/model"
 	"github.com/rafaeldepontes/imagopher/internal/images/processor"
 	"github.com/rafaeldepontes/imagopher/internal/images/processor/service"
@@ -55,29 +54,30 @@ func (ic *imageController) FindImageByID(w http.ResponseWriter, r *http.Request)
 
 // FindImages implements [processor.Controller].
 func (ic *imageController) FindImages(w http.ResponseWriter, r *http.Request) {
-	var cursorReq cursorModel.CursorBody
-	if err := json.NewDecoder(r.Body).Decode(&cursorReq); err != nil {
-		log.Println("[ERROR] Could not parse the request body: ", err)
-		http.Error(w, "Something went really bad", http.StatusBadRequest)
-		return
-	}
+	var cursor string = r.URL.Query().Get("c")
 
-	imgs, err := ic.imgSvc.FindImages(cursorReq)
+	imgs, err := ic.imgSvc.FindImages(cursor)
 	if err != nil {
 		log.Println("[ERROR] Could not find the images: ", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	// Sends back everything...
-	if err = json.NewEncoder(w).Encode(imgs); err != nil {
-		log.Println("[ERROR] Could not parse JSON: ", err)
-		http.Error(w, "Something went really bad", http.StatusInternalServerError)
+	if len(imgs.Data) == 0 {
+		log.Println("[INFO] No results")
+		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
 	// Create the beatiful response
 	w.Header().Set("Content-Type", "application/json")
+
+	// Sends back everything...
+	if err = json.NewEncoder(w).Encode(*imgs); err != nil {
+		log.Println("[ERROR] Could not parse JSON: ", err)
+		http.Error(w, "Something went really bad", http.StatusInternalServerError)
+		return
+	}
 }
 
 // TransformImage implements [processor.Controller].

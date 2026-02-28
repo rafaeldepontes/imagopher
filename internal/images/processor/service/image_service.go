@@ -21,7 +21,6 @@ import (
 	"github.com/rafaeldepontes/imagopher/internal/cache"
 	"github.com/rafaeldepontes/imagopher/internal/cache/imagec"
 	"github.com/rafaeldepontes/imagopher/internal/cursor"
-	cursorModel "github.com/rafaeldepontes/imagopher/internal/cursor/model"
 	pageSvc "github.com/rafaeldepontes/imagopher/internal/cursor/service"
 	imgModel "github.com/rafaeldepontes/imagopher/internal/images/model"
 	"github.com/rafaeldepontes/imagopher/internal/images/processor"
@@ -79,8 +78,9 @@ func (i *imageService) FindImageByUUID(body string) (*imgModel.ImageEntity, erro
 }
 
 // FindImages implements [processor.Service].
-func (i *imageService) FindImages(cursorReq cursorModel.CursorBody) (*imgModel.ImageResp, error) {
-	if err := validateCursorBody(cursorReq); err != nil {
+func (i *imageService) FindImages(cursor string) (*imgModel.ImageResp, error) {
+	cursorReq, err := validateCursorBody(i, cursor)
+	if err != nil {
 		log.Println("[INFO] Invalid cursor body:", err)
 		return nil, err
 	}
@@ -96,8 +96,8 @@ func (i *imageService) FindImages(cursorReq cursorModel.CursorBody) (*imgModel.I
 	}
 
 	page, err := i.pagination.Encode(
-		cursorReq.Size+DefaultCursorSize,
-		new(*cursorReq.NextCursor+DefaultCursorSize),
+		cursorReq.Size,
+		new(*cursorReq.NextCursor+DefaultCursorID),
 	)
 	if err != nil {
 		return nil, err

@@ -74,9 +74,9 @@ func (i *imageRepository) FindImageByUUID(id uuid.UUID) (*model.ImageEntity, err
 func (i *imageRepository) FindImages(size int, nextCursor *int64) ([]model.ImageEntity, error) {
 	var imgs []model.ImageEntity
 
-	query := "SELECT id, path, type, mimeType, created_at, uuid FROM images WHERE 1=1 AND (id > $1) ORDER BY created_at ASC, id ASC LIMIT $2;"
+	query := "SELECT id, path, type, mimeType, created_at, uuid FROM images img WHERE 1=1 AND (img.id > $1) ORDER BY id ASC LIMIT $2;"
 
-	rows, err := i.db.Query(query, nextCursor, size)
+	rows, err := i.db.Query(query, *nextCursor, size)
 	if err != nil {
 		log.Println("[ERROR] Could not built the query:", err)
 		return nil, err

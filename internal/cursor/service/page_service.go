@@ -55,6 +55,13 @@ func (s *cursorService) Encode(size int, nextCursor *int64) (string, error) {
 // Decode accepts a hashed source to decode, it will return the CursorPagination with the
 // T type generic specified previously and an error if any.
 func (s *cursorService) Decode(src string) (*cursorMdl.CursorBody, error) {
+	if src == "" {
+		return &cursorMdl.CursorBody{
+			Size:       10,
+			NextCursor: new(int64(0)),
+		}, nil
+	}
+
 	combined, err := base64.RawURLEncoding.DecodeString(src)
 	if err != nil {
 		return nil, err
