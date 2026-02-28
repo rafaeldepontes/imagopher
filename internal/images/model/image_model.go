@@ -7,7 +7,7 @@ import (
 )
 
 type ImageEntity struct {
-	ID        uint64    `json:"id"`
+	ID        int64    `json:"id"`
 	Path      string    `json:"path"`
 	UUID      uuid.UUID `json:"uuid"`
 	Type      string    `json:"type"`

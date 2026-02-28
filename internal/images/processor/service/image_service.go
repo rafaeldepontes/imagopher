@@ -31,19 +31,19 @@ import (
 type imageService struct {
 	repo       processor.Repository
 	pagination cursor.Page
-	cache      cache.Cache[string, *uint64]
+	cache      cache.Cache[string, *int64]
 }
 
 func NewService() processor.Service {
 	return &imageService{
 		repo:       repository.NewRepository(),
 		pagination: pageSvc.NewService(),
-		cache:      imagec.NewCache[*uint64](),
+		cache:      imagec.NewCache[*int64](),
 	}
 }
 
 // FindImageByID implements [processor.Service].
-func (i *imageService) FindImageByID(id *uint64) (*imgModel.ImageEntity, error) {
+func (i *imageService) FindImageByID(id *int64) (*imgModel.ImageEntity, error) {
 	log.Printf("[INFO] Searchig for an image by it's ID: %d\n", id)
 
 	img, err := i.repo.FindImageByID(id)

@@ -6,8 +6,8 @@ import (
 )
 
 type Repository interface {
-	FindImageByID(id *uint64) (*model.ImageEntity, error)
+	FindImageByID(id *int64) (*model.ImageEntity, error)
 	FindImageByUUID(uuid uuid.UUID) (*model.ImageEntity, error)
-	FindImages(int, *uint64) ([]model.ImageEntity, error)
-	UploadImage(img *model.ImageEntity) (*uint64, error)
+	FindImages(int, *int64) ([]model.ImageEntity, error)
+	UploadImage(img *model.ImageEntity) (*int64, error)
 }

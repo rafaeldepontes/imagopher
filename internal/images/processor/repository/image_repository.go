@@ -29,12 +29,12 @@ func NewRepository() processor.Repository {
 }
 
 // FindImageByID this is the big deal, use this instead of the FindImageByUUID.
-func (i *imageRepository) FindImageByID(id *uint64) (*model.ImageEntity, error) {
+func (i *imageRepository) FindImageByID(id *int64) (*model.ImageEntity, error) {
 	img := &model.ImageEntity{}
 
 	query := "SELECT id, path, type, mimeType, created_at, uuid FROM images img WHERE img.id = $1"
 
-	if err := i.db.QueryRow(query, id).Scan(
+	if err := i.db.QueryRow(query, *id).Scan(
 		&img.ID,
 		&img.Path,
 		&img.Type,
@@ -71,7 +71,7 @@ func (i *imageRepository) FindImageByUUID(id uuid.UUID) (*model.ImageEntity, err
 
 // FindImages returns the list of all images in the database, it should have a
 // cursor pagination allowing a BLAZING FAST queries to the Database... (Node.Js moment)
-func (i *imageRepository) FindImages(size int, nextCursor *uint64) ([]model.ImageEntity, error) {
+func (i *imageRepository) FindImages(size int, nextCursor *int64) ([]model.ImageEntity, error) {
 	var imgs []model.ImageEntity
 
 	query := "SELECT id, path, type, mimeType, created_at, uuid FROM images WHERE 1=1 AND (id > $1) ORDER BY created_at ASC, id ASC LIMIT $2;"
@@ -108,10 +108,10 @@ func (i *imageRepository) FindImages(size int, nextCursor *uint64) ([]model.Imag
 	return imgs, nil
 }
 
-func (i *imageRepository) UploadImage(img *model.ImageEntity) (*uint64, error) {
+func (i *imageRepository) UploadImage(img *model.ImageEntity) (*int64, error) {
 	query := "INSERT INTO images (path, type, mimeType, uuid) VALUES ($1, $2, $3, $4) RETURNING id;"
 
-	var id uint64
+	var id int64
 	if err := i.db.QueryRow(
 		query,
 		img.Path,
