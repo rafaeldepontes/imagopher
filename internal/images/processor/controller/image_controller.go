@@ -38,6 +38,12 @@ func (ic *imageController) FindImageByID(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	if img == nil {
+		log.Println("[INFO] No results")
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
 	f, err := os.Open(img.Path)
 	if err != nil {
 		log.Println("[ERROR] Could not open the image by its path: ", err)

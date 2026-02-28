@@ -72,7 +72,9 @@ func (i *imageService) FindImageByUUID(body string) (*imgModel.ImageEntity, erro
 		return nil, err
 	}
 
-	i.cache.Add(body, new(img.ID))
+	if img != nil {
+		i.cache.Add(body, new(img.ID))
+	}
 
 	return img, nil
 }

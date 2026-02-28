@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"errors"
 	"log"
 
 	"github.com/google/uuid"
@@ -63,6 +64,10 @@ func (i *imageRepository) FindImageByUUID(id uuid.UUID) (*model.ImageEntity, err
 		&img.CreatedAt,
 		&img.UUID,
 	); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+
 		log.Println("[ERROR] Could not complete the scan:", err)
 		return nil, err
 	}
