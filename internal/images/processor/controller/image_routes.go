@@ -9,7 +9,6 @@ import (
 // my onw, but that seems a little to much.
 func MapImageRoutes(r *chi.Mux, c processor.Controller) {
 
-	// TODO: Implement the cursor pagination...
 	r.Get("/images", c.FindImages)
 
 	r.Post("/images", c.UploadImage)
